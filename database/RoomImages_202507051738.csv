@@ -1,0 +1,4 @@
+"image_id","room_id","image_url","description"
+1,1,https://example.com/images/standard.jpg,Standard Room
+2,2,https://example.com/images/deluxe.jpg,Deluxe Room
+3,3,https://example.com/images/suite.jpg,Suite Room
