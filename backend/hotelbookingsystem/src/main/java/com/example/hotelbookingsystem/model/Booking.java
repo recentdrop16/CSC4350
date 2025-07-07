@@ -1,7 +1,6 @@
 package com.example.hotelbookingsystem.model;
 
 import jakarta.persistence.*;
-
 import java.time.LocalDate;
 
 @Entity
@@ -27,10 +26,13 @@ public class Booking {
     @Column(name = "check_out")
     private LocalDate checkOut;
 
-    private String status;
-
     @Column(name = "booking_date")
     private LocalDate bookingDate;
+
+    private String status;
+
+    @Column(name = "is_cancelled")
+    private boolean isCancelled = false;
 
     public Booking() {}
 
@@ -84,5 +86,17 @@ public class Booking {
 
     public void setBookingDate(LocalDate bookingDate) {
         this.bookingDate = bookingDate;
+    }
+
+    public boolean isCancelled() {
+        return isCancelled;
+    }
+
+    public void setCancelled(boolean cancelled) {
+        isCancelled = cancelled;
+    }
+
+    public boolean overlaps(LocalDate checkIn, LocalDate checkOut) {
+        return !(this.checkOut.isBefore(checkIn) || this.checkIn.isAfter(checkOut));
     }
 }

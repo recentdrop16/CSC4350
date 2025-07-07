@@ -1,4 +1,3 @@
-// Payment.java
 package com.example.hotelbookingsystem.model;
 
 import jakarta.persistence.*;
@@ -24,7 +23,7 @@ public class Payment {
     private Double totalPrice;
 
     @Column(name = "payment_status")
-    private String paymentStatus; // e.g., "pending", "completed", "failed"
+    private String paymentStatus;
 
     public Payment() {}
 

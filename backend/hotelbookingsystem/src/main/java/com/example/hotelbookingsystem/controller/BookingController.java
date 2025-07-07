@@ -22,8 +22,9 @@ public class BookingController {
 
     @PostMapping
     public Booking makeBooking(@RequestBody Booking booking) {
-        return bookingService.makeBooking(booking);
+        return bookingService.createBooking(booking); // updated version
     }
+
 
     @GetMapping
     public List<Booking> getAllBookings() {

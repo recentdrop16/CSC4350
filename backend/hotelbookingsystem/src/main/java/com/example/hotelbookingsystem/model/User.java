@@ -13,8 +13,10 @@ public class User {
 
     private String username;
     private String password;
-    private String role; // change to int if role is numeric
     private String email;
+
+    @Enumerated(EnumType.STRING)
+    private Role role;
 
     public User() {}
 
@@ -38,11 +40,11 @@ public class User {
         this.password = password;
     }
 
-    public String getRole() {
+    public Role getRole() {
         return role;
     }
 
-    public void setRole(String role) {
+    public void setRole(Role role) {
         this.role = role;
     }
 

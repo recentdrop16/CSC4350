@@ -10,15 +10,6 @@ public class Room {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "room_id")
     private Long id;
-    @Column(name = "image_url")
-    private String imageUrl;
-    public String getImageUrl() {
-        return imageUrl;
-    }
-
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
-    }
 
     @Column(name = "room_type")
     private String roomType;
@@ -30,6 +21,15 @@ public class Room {
     private String description;
 
     private double discount;
+
+    @Column(name = "image_url")
+    private String imageUrl;
+
+    @Column(name = "capacity")
+    private int capacity;
+
+    @Column(name = "features")
+    private String features;
 
     public Room() {}
 
@@ -75,5 +75,29 @@ public class Room {
 
     public void setDiscount(double discount) {
         this.discount = discount;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    public int getCapacity() {
+        return capacity;
+    }
+
+    public void setCapacity(int capacity) {
+        this.capacity = capacity;
+    }
+
+    public String getFeatures() {
+        return features;
+    }
+
+    public void setFeatures(String features) {
+        this.features = features;
     }
 }

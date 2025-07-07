@@ -6,5 +6,8 @@ import java.util.List;
 
 public interface RoomRepository extends JpaRepository<Room, Long> {
     List<Room> findByAvailability(int availability);
+
     List<Room> findByIdNotIn(List<Long> ids);
+
+    List<Room> findByAvailabilityGreaterThan(int minAvailability);
 }

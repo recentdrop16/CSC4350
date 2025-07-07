@@ -14,6 +14,11 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     @Query("SELECT b.room.id FROM Booking b WHERE " +
            "b.checkIn < :checkOut AND b.checkOut > :checkIn")
-    List<Long> findBookedRoomIdsInRange(@Param("checkIn") LocalDate checkIn, @Param("checkOut") LocalDate checkOut);
-    
+    List<Long> findBookedRoomIdsInRange(@Param("checkIn") LocalDate checkIn,
+                                        @Param("checkOut") LocalDate checkOut);
+
+    List<Booking> findByUserAndIsCancelledFalse(User user);
+
+    @Query("SELECT b FROM Booking b WHERE b.checkIn >= :today AND b.isCancelled = false")
+    List<Booking> findAllUpcomingBookings(@Param("today") LocalDate today);
 }
