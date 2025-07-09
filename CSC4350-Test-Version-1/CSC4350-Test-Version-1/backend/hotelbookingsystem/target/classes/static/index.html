@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Weeb Hotel</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: url("images/background.jpg") no-repeat center center fixed;
+      background-size: cover;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .container {
+      text-align: center;
+      margin-top: auto;
+      margin-bottom: auto;
+      background-color: rgba(0, 0, 0, 0.6);
+      padding: 40px;
+      border-radius: 15px;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    h1 {
+      font-size: 2.5em;
+      margin-bottom: 0;
+    }
+
+    .tagline {
+      font-style: italic;
+      margin-bottom: 30px;
+    }
+
+    input, button, select {
+      width: 80%;
+      margin: 10px auto;
+      padding: 12px;
+      border-radius: 5px;
+      border: none;
+      display: block;
+      font-size: 1em;
+    }
+
+    button {
+      background-color: #ffffff;
+      color: #0077b6;
+      font-weight: bold;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #e0e0e0;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      background-color: rgba(0, 0, 0, 0.5);
+      font-size: 0.9em;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Weeb Hotel</h1>
+    <p class="tagline">“Experience luxury in the heart of the city.”</p>
+
+    <!-- Login Section -->
+    <input type="text" id="username" placeholder="Username" />
+    <input type="password" id="password" placeholder="Password" />
+    <button onclick="handleLogin()">Login</button>
+    <button onclick="continueAsGuest()">Continue as Guest</button>
+    <button onclick="toggleRegisterForm()">Create New Account</button>
+
+    <!-- Register Form -->
+    <div id="registerForm" style="display:none; margin-top: 30px;">
+      <h3>Create New Account</h3>
+      <input type="text" id="regUsername" placeholder="Username" />
+      <input type="password" id="regPassword" placeholder="Password" />
+      <input type="email" id="regEmail" placeholder="Email" />
+      <input type="hidden" id="regRole" value="2" />
+      <button onclick="handleRegister()">Register</button>
+    </div>
+  </div>
+
+  <footer>
+    123 Anime Avenue, Atlanta, GA 30303 · (012) 345-6789 · contact@weeb.com
+  </footer>
+
+  <script>
+    async function handleLogin() {
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+
+      if (!username || !password) {
+        alert("Please enter both username and password.");
+        return;
+      }
+
+      try {
+        const res = await fetch(`http://localhost:8080/api/users/${username}`);
+        if (!res.ok) throw new Error("User not found");
+        const user = await res.json();
+
+        if (user.password !== password) {
+          alert("Incorrect password.");
+          return;
+        }
+
+        if (user.role === 1) {
+          window.location.href = "admin.html";
+        } else {
+          localStorage.setItem("username", user.username); // <--- this must be here
+          window.location.href = "user.html";
+        }
+
+      } catch (err) {
+        console.error(err);
+        alert("Login failed. Please check your username.");
+      }
+    }
+
+    function continueAsGuest() {
+      window.location.href = "rooms.html";
+    }
+
+    function toggleRegisterForm() {
+      const form = document.getElementById("registerForm");
+      form.style.display = form.style.display === "none" ? "block" : "none";
+    }
+
+    async function handleRegister() {
+      const username = document.getElementById("regUsername").value;
+      const password = document.getElementById("regPassword").value;
+      const email = document.getElementById("regEmail").value;
+      const role = document.getElementById("regRole").value;
+
+      if (!username || !password || !email) {
+        alert("Please fill out all fields.");
+        return;
+      }
+      try {
+        // Check if username already exists
+        const resUsername = await fetch(`http://localhost:8080/api/users/${username}`);
+        if (resUsername.ok) {
+          alert("Username is already taken.");
+          return;
+        }
+
+        // Check if email already exists
+        const resEmail = await fetch(`http://localhost:8080/api/users/email/${email}`);
+        if (resEmail.ok) {
+          alert("Email is already registered.");
+          return;
+        }
+
+        // Proceed with registration
+        const res = await fetch("http://localhost:8080/api/users/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password, email, role })
+        });
+
+        if (res.ok) {
+          alert("Registration successful! You can now log in.");
+          document.getElementById("regUsername").value = "";
+          document.getElementById("regPassword").value = "";
+          document.getElementById("regEmail").value = "";
+          toggleRegisterForm();
+        } else {
+          const error = await res.text();
+          alert("Registration failed: " + error);
+        }
+
+      } catch (err) {
+        console.error(err);
+        alert("Something went wrong during registration.");
+      }
+    }
+  </script>
+
+</body>
+</html>

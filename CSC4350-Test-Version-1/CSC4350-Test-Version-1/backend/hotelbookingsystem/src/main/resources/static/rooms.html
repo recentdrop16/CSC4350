@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Browse Rooms - Weeb Hotel</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: url("images/background.jpg") no-repeat center center fixed;
+      background-size: cover;
+      color: white;
+      text-align: center;
+    }
+
+    .container {
+      background-color: rgba(0,0,0,0.6);
+      padding: 40px;
+      border-radius: 15px;
+      max-width: 800px;
+      margin: 60px auto;
+    }
+
+    input, button {
+      margin: 10px;
+      padding: 10px;
+      border-radius: 5px;
+      border: none;
+      width: 200px;
+      font-size: 1em;
+    }
+
+    button {
+      background-color: white;
+      color: #0077b6;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background-color: #ddd;
+    }
+
+    .room-card {
+      background: rgba(255,255,255,0.1);
+      border-radius: 10px;
+      margin: 20px 0;
+      padding: 20px;
+      text-align: left;
+    }
+
+    .room-card img {
+      width: 300px;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 10px;
+      display: block;
+      margin: 0 auto;
+    }
+
+    .room-card h3, .room-card p {
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Check Room Availability</h1>
+    <input type="date" id="checkIn" />
+    <input type="date" id="checkOut" />
+    <button onclick="searchRooms()">Search Availability</button>
+
+    <div id="roomResults"></div>
+  </div>
+
+  <script>
+    async function searchRooms() {
+      const checkIn = document.getElementById("checkIn").value;
+      const checkOut = document.getElementById("checkOut").value;
+
+      if (!checkIn || !checkOut || checkIn >= checkOut) {
+        alert("Please select valid check-in and check-out dates.");
+        return;
+      }
+
+      try {
+        const res = await fetch(`http://localhost:8080/api/rooms/available?checkIn=${checkIn}&checkOut=${checkOut}`);
+        const rooms = await res.json();
+
+        const resultContainer = document.getElementById("roomResults");
+        resultContainer.innerHTML = "";
+
+        if (rooms.length === 0) {
+          resultContainer.innerHTML = "<p>No rooms available for selected dates.</p>";
+          return;
+        }
+
+        rooms.forEach(room => {
+          const card = document.createElement("div");
+          card.className = "room-card";
+          card.innerHTML = `
+            <img src="${room.imageUrl || 'images/default.jpg'}" alt="Room Image"/>
+            <h3>${room.roomType}</h3>
+            <p>${room.description}</p>
+            <p><strong>Price:</strong> $${room.price} per night</p>
+            <button onclick="bookRoom(${room.id})">Book Now</button>
+          `;
+          resultContainer.appendChild(card);
+        });
+
+      } catch (err) {
+        console.error(err);
+        alert("Error fetching room availability.");
+      }
+    }
+
+    function bookRoom(roomId) {
+      const user = localStorage.getItem("username");
+      if (!user) {
+        alert("Please log in to continue booking.");
+        window.location.href = "index.html";
+        return;
+      }
+
+      // Proceed to booking (you can enhance this later)
+      alert(`Proceeding to book Room ID: ${roomId}`);
+      // Example redirection:
+      // window.location.href = `booking.html?roomId=${roomId}&checkIn=${checkIn}&checkOut=${checkOut}`;
+    }
+  </script>
+
+</body>
+</html>

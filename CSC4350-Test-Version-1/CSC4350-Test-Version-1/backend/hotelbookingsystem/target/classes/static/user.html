@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>User Dashboard - Weeb Hotel</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: url("images/background.jpg") no-repeat center center fixed;
+      background-size: cover;
+      color: white;
+      text-align: center;
+    }
+
+    .container {
+      background-color: rgba(0,0,0,0.6);
+      padding: 40px;
+      border-radius: 15px;
+      max-width: 1000px;
+      margin: 60px auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 30px;
+    }
+
+    th, td {
+      padding: 12px;
+      border: 1px solid white;
+    }
+
+    th {
+      background-color: #0077b6;
+    }
+
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      background-color: white;
+      color: #0077b6;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+
+    button:hover {
+      background-color: #ddd;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Welcome, <span id="displayUsername"></span></h1>
+    <p>Email: <span id="email"></span></p>
+
+    <h2>Your Booking History</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Room Type</th>
+          <th>Check-In</th>
+          <th>Check-Out</th>
+          <th>Total Price</th>
+          <th>Status</th>
+          <th>Payment Date</th>
+        </tr>
+      </thead>
+      <tbody id="bookingTable">
+        <!-- JS will populate rows here -->
+      </tbody>
+    </table>
+
+    <button onclick="logout()">Logout</button>
+    <button onclick="window.location.href='rooms.html'">Make Another Booking</button>
+  </div>
+
+  <script>
+    const username = localStorage.getItem("username");
+    if (!username) {
+      alert("Please log in to access your profile.");
+      window.location.href = "index.html";
+    } else {
+      document.getElementById("displayUsername").innerText = username;
+
+      fetch(`http://localhost:8080/api/users/${username}`)
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById("email").innerText = data.email;
+        });
+
+      fetch(`http://localhost:8080/api/bookings/user/${username}`)
+        .then(res => res.json())
+        .then(bookings => {
+          const table = document.getElementById("bookingTable");
+          table.innerHTML = "";
+
+          bookings.forEach(b => {
+            fetch(`http://localhost:8080/api/payments/booking/${b.id}`)
+              .then(res => res.ok ? res.json() : { totalPrice: "N/A", paymentDate: "N/A", paymentStatus: "N/A" })
+              .then(payment => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                  <td>${b.room.roomType}</td>
+                  <td>${b.checkIn}</td>
+                  <td>${b.checkOut}</td>
+                  <td>$${payment.totalPrice ?? "N/A"}</td>
+                  <td>${payment.paymentStatus ?? "N/A"}</td>
+                  <td>${payment.paymentDate ?? "N/A"}</td>
+                `;
+                table.appendChild(row);
+              });
+          });
+        })
+        .catch(err => {
+          console.error(err);
+          alert("Error fetching booking history.");
+        });
+    }
+
+    function logout() {
+      localStorage.removeItem("username");
+      window.location.href = "index.html";
+    }
+  </script>
+</body>
+</html>
