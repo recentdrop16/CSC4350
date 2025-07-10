@@ -21,11 +21,8 @@ public class RoomController {
             @RequestParam(required = false) String checkIn,
             @RequestParam(required = false) String checkOut
     ) {
-        if (checkIn != null && checkOut != null) {
+       
             return roomService.getAvailableRooms(LocalDate.parse(checkIn), LocalDate.parse(checkOut));
-        } else {
-            return roomService.getAvailableRooms(); // fallback to availability = 1
-        }
     }
 
     @GetMapping

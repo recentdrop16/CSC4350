@@ -29,10 +29,6 @@ public class RoomService {
         return roomRepository.findAll();
     }
 
-    public List<Room> getAvailableRooms() {
-        return roomRepository.findByAvailability(1);
-
-    }
 
     public Room saveRoom(Room room) {
         return roomRepository.save(room);
