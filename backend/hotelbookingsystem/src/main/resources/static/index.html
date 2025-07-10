@@ -68,6 +68,10 @@
       bottom: 0;
       width: 100%;
     }
+
+    .hidden {
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -77,20 +81,24 @@
     <p class="tagline">“Experience luxury in the heart of the city.”</p>
 
     <!-- Login Section -->
-    <input type="text" id="username" placeholder="Username" />
-    <input type="password" id="password" placeholder="Password" />
-    <button onclick="handleLogin()">Login</button>
-    <button onclick="continueAsGuest()">Continue as Guest</button>
-    <button onclick="toggleRegisterForm()">Create New Account</button>
+    <div id="loginForm">
+      <input type="text" id="username" placeholder="Username" />
+      <input type="password" id="password" placeholder="Password" />
+      <button onclick="handleLogin()">Login</button>
+      <button onclick="continueAsGuest()">Continue as Guest</button>
+      <button onclick="toggleRegisterForm()">Create New Account</button>
+    </div>
 
     <!-- Register Form -->
-    <div id="registerForm" style="display:none; margin-top: 30px;">
+    <div id="registerForm" class="hidden" style="margin-top: 30px;">
       <h3>Create New Account</h3>
       <input type="text" id="regUsername" placeholder="Username" />
       <input type="password" id="regPassword" placeholder="Password" />
       <input type="email" id="regEmail" placeholder="Email" />
+      <input type="email" id="regEmailRepeat" placeholder="Repeat Email" />
       <input type="hidden" id="regRole" value="2" />
       <button onclick="handleRegister()">Register</button>
+      <button onclick="cancelRegister()">Cancel</button>
     </div>
   </div>
 
@@ -99,6 +107,24 @@
   </footer>
 
   <script>
+    function toggleRegisterForm() {
+      document.getElementById("loginForm").classList.add("hidden");
+      document.getElementById("registerForm").classList.remove("hidden");
+    }
+
+    function cancelRegister() {
+      document.getElementById("registerForm").classList.add("hidden");
+      document.getElementById("loginForm").classList.remove("hidden");
+      clearRegisterForm();
+    }
+
+    function clearRegisterForm() {
+      document.getElementById("regUsername").value = "";
+      document.getElementById("regPassword").value = "";
+      document.getElementById("regEmail").value = "";
+      document.getElementById("regEmailRepeat").value = "";
+    }
+
     async function handleLogin() {
       const username = document.getElementById("username").value;
       const password = document.getElementById("password").value;
@@ -121,7 +147,7 @@
         if (user.role === 1) {
           window.location.href = "admin.html";
         } else {
-          localStorage.setItem("username", user.username); // <--- this must be here
+          localStorage.setItem("username", user.username);
           window.location.href = "user.html";
         }
 
@@ -135,37 +161,36 @@
       window.location.href = "rooms.html";
     }
 
-    function toggleRegisterForm() {
-      const form = document.getElementById("registerForm");
-      form.style.display = form.style.display === "none" ? "block" : "none";
-    }
-
     async function handleRegister() {
       const username = document.getElementById("regUsername").value;
       const password = document.getElementById("regPassword").value;
       const email = document.getElementById("regEmail").value;
+      const repeatEmail = document.getElementById("regEmailRepeat").value;
       const role = document.getElementById("regRole").value;
 
-      if (!username || !password || !email) {
+      if (!username || !password || !email || !repeatEmail) {
         alert("Please fill out all fields.");
         return;
       }
+
+      if (email !== repeatEmail) {
+        alert("Emails do not match.");
+        return;
+      }
+
       try {
-        // Check if username already exists
         const resUsername = await fetch(`http://localhost:8080/api/users/${username}`);
         if (resUsername.ok) {
           alert("Username is already taken.");
           return;
         }
 
-        // Check if email already exists
         const resEmail = await fetch(`http://localhost:8080/api/users/email/${email}`);
         if (resEmail.ok) {
           alert("Email is already registered.");
           return;
         }
 
-        // Proceed with registration
         const res = await fetch("http://localhost:8080/api/users/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -174,10 +199,8 @@
 
         if (res.ok) {
           alert("Registration successful! You can now log in.");
-          document.getElementById("regUsername").value = "";
-          document.getElementById("regPassword").value = "";
-          document.getElementById("regEmail").value = "";
-          toggleRegisterForm();
+          clearRegisterForm();
+          cancelRegister();
         } else {
           const error = await res.text();
           alert("Registration failed: " + error);
