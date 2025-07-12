@@ -1,44 +1,46 @@
 package com.example.hotelbookingsystem.service;
 
-import com.example.hotelbookingsystem.model.Room;
+import com.example.hotelbookingsystem.dto.AvailableRoomDTO;
+import com.example.hotelbookingsystem.model.RoomType;
+import com.example.hotelbookingsystem.repository.RoomTypeRepository;
 import com.example.hotelbookingsystem.repository.BookingRepository;
-import com.example.hotelbookingsystem.repository.RoomRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class RoomService {
 
-    @Autowired
-    private RoomRepository roomRepository;
-    @Autowired
-    private BookingRepository bookingRepository;
-    public List<Room> getAvailableRooms(LocalDate checkIn, LocalDate checkOut) {
-        List<Long> bookedRoomIds = bookingRepository.findBookedRoomIdsInRange(checkIn, checkOut);
-        if (bookedRoomIds == null || bookedRoomIds.isEmpty()) {
-            return roomRepository.findByAvailability(1); // all available rooms
-        } else {
-            return roomRepository.findByIdNotIn(bookedRoomIds);
+    private final RoomTypeRepository roomTypeRepository;
+    private final BookingRepository bookingRepository;
+
+    public RoomService(RoomTypeRepository roomTypeRepository,
+                       BookingRepository bookingRepository) {
+        this.roomTypeRepository = roomTypeRepository;
+        this.bookingRepository = bookingRepository;
+    }
+
+    public List<AvailableRoomDTO> getAvailableRoomTypes(LocalDate checkIn, LocalDate checkOut,
+                                                        Integer capacity, String type, Integer requestedRoomCount) {
+
+        List<RoomType> allRoomTypes = roomTypeRepository.findAll();
+        List<AvailableRoomDTO> result = new ArrayList<>();
+
+        for (RoomType rt : allRoomTypes) {
+            if (capacity != null && rt.getCapacity() < capacity) continue;
+            if (type != null && !rt.getRoomType().equalsIgnoreCase(type)) continue;
+
+            int totalRooms = rt.getTotalRooms(); // ✅ using column from RoomType table
+            int bookedRooms = bookingRepository.countBookedRooms(rt.getId(), checkIn, checkOut);
+            int available = totalRooms - bookedRooms;
+
+            if (available > 0 && (requestedRoomCount == null || available >= requestedRoomCount)) {
+                result.add(new AvailableRoomDTO(rt, available));
+            }
         }
-    }
-    
-    public List<Room> getAllRooms() {
-        return roomRepository.findAll();
-    }
 
-
-    public Room saveRoom(Room room) {
-        return roomRepository.save(room);
-    }
-
-    public Room getRoomById(Long id) {
-        return roomRepository.findById(id).orElse(null);
-    }
-
-    public void deleteRoom(Long id) {
-        roomRepository.deleteById(id);
+        return result;
     }
 }

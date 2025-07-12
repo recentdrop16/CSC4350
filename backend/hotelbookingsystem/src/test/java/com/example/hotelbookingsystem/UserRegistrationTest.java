@@ -35,11 +35,7 @@ public class UserRegistrationTest {
         newUser.setPassword("securepass");
         newUser.setEmail("unique@example.com");
         newUser.setRole("guest");
-
-        
         when(userService.registerUser(newUser)).thenReturn(newUser);
-
-        
         mockMvc.perform(post("/api/users/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(newUser)))

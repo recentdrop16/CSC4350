@@ -61,12 +61,13 @@
     <table>
       <thead>
         <tr>
+          <th>Booking ID</th>
           <th>Room Type</th>
           <th>Check-In</th>
           <th>Check-Out</th>
-          <th>Total Price</th>
+          <th>Guest Name</th>
+          <th>Number of Rooms</th>
           <th>Status</th>
-          <th>Payment Date</th>
         </tr>
       </thead>
       <tbody id="bookingTable">
@@ -86,12 +87,14 @@
     } else {
       document.getElementById("displayUsername").innerText = username;
 
+      // Fetch and display email
       fetch(`http://localhost:8080/api/users/${username}`)
         .then(res => res.json())
         .then(data => {
           document.getElementById("email").innerText = data.email;
         });
 
+      // Fetch and display booking history
       fetch(`http://localhost:8080/api/bookings/user/${username}`)
         .then(res => res.json())
         .then(bookings => {
@@ -99,20 +102,17 @@
           table.innerHTML = "";
 
           bookings.forEach(b => {
-            fetch(`http://localhost:8080/api/payments/booking/${b.id}`)
-              .then(res => res.ok ? res.json() : { totalPrice: "N/A", paymentDate: "N/A", paymentStatus: "N/A" })
-              .then(payment => {
-                const row = document.createElement("tr");
-                row.innerHTML = `
-                  <td>${b.room.roomType}</td>
-                  <td>${b.checkIn}</td>
-                  <td>${b.checkOut}</td>
-                  <td>$${payment.totalPrice ?? "N/A"}</td>
-                  <td>${payment.paymentStatus ?? "N/A"}</td>
-                  <td>${payment.paymentDate ?? "N/A"}</td>
-                `;
-                table.appendChild(row);
-              });
+            const row = document.createElement("tr");
+            row.innerHTML = `
+              <td>${b.id}</td>
+              <td>${b.roomType.roomType}</td>
+              <td>${b.startDate}</td>
+              <td>${b.endDate}</td>
+              <td>${b.guestName}</td>
+              <td>${b.numRooms}</td>
+              <td>${b.bookingStatus}</td>
+            `;
+            table.appendChild(row);
           });
         })
         .catch(err => {

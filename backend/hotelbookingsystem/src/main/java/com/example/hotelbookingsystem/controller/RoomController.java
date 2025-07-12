@@ -1,42 +1,33 @@
 package com.example.hotelbookingsystem.controller;
-
-import com.example.hotelbookingsystem.model.Room;
+import java.time.LocalDate;
+import com.example.hotelbookingsystem.dto.AvailableRoomDTO;
 import com.example.hotelbookingsystem.service.RoomService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/rooms")
-@CrossOrigin(origins = "*")
 public class RoomController {
 
-    @Autowired
-    private RoomService roomService;
+    private final RoomService roomService;
+
+    public RoomController(RoomService roomService) {
+        this.roomService = roomService;
+    }
 
     @GetMapping("/available")
-    public List<Room> getAvailableRooms(
-            @RequestParam(required = false) String checkIn,
-            @RequestParam(required = false) String checkOut
+    public List<AvailableRoomDTO> getAvailableRooms(
+            @RequestParam String checkIn,
+            @RequestParam String checkOut,
+            @RequestParam(required = false) Integer capacity,
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) Integer roomCount
     ) {
-       
-            return roomService.getAvailableRooms(LocalDate.parse(checkIn), LocalDate.parse(checkOut));
-    }
-
-    @GetMapping
-    public List<Room> getAllRooms() {
-        return roomService.getAllRooms();
-    }
-
-    @PostMapping
-    public Room createRoom(@RequestBody Room room) {
-        return roomService.saveRoom(room);
-    }
-
-    @DeleteMapping("/{id}")
-    public void deleteRoom(@PathVariable Long id) {
-        roomService.deleteRoom(id);
+        LocalDate start = LocalDate.parse(checkIn);
+        LocalDate end = LocalDate.parse(checkOut);
+        return roomService.getAvailableRoomTypes(start, end, capacity, type, roomCount);
     }
 }

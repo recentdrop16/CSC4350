@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Confirm Booking - Weeb Hotel</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: url("images/background.jpg") no-repeat center center fixed;
+      background-size: cover;
+      color: white;
+      text-align: center;
+    }
+
+    .container {
+      background-color: rgba(0,0,0,0.6);
+      padding: 40px;
+      border-radius: 15px;
+      max-width: 600px;
+      margin: 60px auto;
+    }
+
+    h1, h2 {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+      text-align: left;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 5px;
+      border: none;
+      background-color: rgba(255, 255, 255, 0.2);
+      color: white;
+      font-size: 1em;
+      backdrop-filter: blur(4px);
+    }
+
+    input::placeholder {
+      color: #ccc;
+    }
+
+    button {
+      margin-top: 25px;
+      padding: 12px 20px;
+      background-color: white;
+      color: #0077b6;
+      font-weight: bold;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #ccc;
+    }
+
+    .summary {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+
+    .button-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Confirm Your Booking</h1>
+
+    <div class="summary">
+      <p><strong>Room Type:</strong> <span id="roomType"></span></p>
+      <p><strong>Check-In:</strong> <span id="checkIn"></span></p>
+      <p><strong>Check-Out:</strong> <span id="checkOut"></span></p>
+      <p><strong>Price per Night:</strong> $<span id="pricePerNight"></span></p>
+      <p><strong>Number of Nights:</strong> <span id="nights"></span></p>
+    </div>
+
+    <label for="guestName">Guest Full Name:</label>
+    <input type="text" id="guestName" placeholder="John Doe" />
+
+    <label for="roomCount">Number of Rooms:</label>
+    <select id="roomCount"></select>
+
+    <label for="cardNumber">Card Number:</label>
+    <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" />
+
+    <label for="expiry">Expiry Date:</label>
+    <input type="text" id="expiry" placeholder="MM/YY" />
+
+    <label for="cvv">CVV:</label>
+    <input type="text" id="cvv" placeholder="123" />
+
+    <h2>Total Price: $<span id="totalPrice">0</span></h2>
+
+    <div class="button-row">
+      <button onclick="submitBooking()">Confirm Booking</button>
+      <button onclick="cancelBooking()">Cancel</button>
+    </div>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const roomTypeId = params.get("roomTypeId");
+    const roomType = params.get("roomType");
+    const checkIn = params.get("checkIn");
+    const checkOut = params.get("checkOut");
+    const pricePerNight = parseFloat(params.get("price"));
+    const available = parseInt(params.get("available")) || 1;
+
+    const username = localStorage.getItem("username");
+
+    // Redirect to login if user not found
+    if (!username) {
+      alert("Please log in.");
+      window.location.href = "index.html";
+    }
+
+    // Validate required params
+    if (!roomTypeId || isNaN(parseInt(roomTypeId))) {
+      alert("Missing or invalid room type ID.");
+      window.location.href = "rooms.html";
+    }
+
+    // Display room info
+    document.getElementById("roomType").innerText = roomType;
+    document.getElementById("checkIn").innerText = checkIn;
+    document.getElementById("checkOut").innerText = checkOut;
+    document.getElementById("pricePerNight").innerText = pricePerNight.toFixed(2);
+
+    // Calculate nights
+    const nights = (new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24);
+    document.getElementById("nights").innerText = nights;
+
+    const totalPriceElement = document.getElementById("totalPrice");
+    const roomCountSelect = document.getElementById("roomCount");
+
+    // Populate room count dropdown
+    for (let i = 1; i <= Math.min(available, 4); i++) {
+      const option = document.createElement("option");
+      option.value = i;
+      option.textContent = `${i} Room${i > 1 ? 's' : ''}`;
+      roomCountSelect.appendChild(option);
+    }
+
+    function updateTotalPrice() {
+      const count = parseInt(roomCountSelect.value);
+      const total = count * pricePerNight * nights;
+      totalPriceElement.innerText = total.toFixed(2);
+    }
+
+    roomCountSelect.addEventListener("change", updateTotalPrice);
+    updateTotalPrice();
+
+    function submitBooking() {
+      const guestName = document.getElementById("guestName").value;
+      const roomCount = parseInt(roomCountSelect.value);
+      const totalAmount = parseFloat(totalPriceElement.innerText);
+
+      if (!guestName || !roomCount || !username) {
+        alert("Please complete all fields.");
+        return;
+      }
+
+      fetch(`/api/users/${username}`)
+        .then(res => res.json())
+        .then(user => {
+          if (!user.id) {
+            alert("User ID is missing. Please log in again.");
+            return;
+          }
+
+          const bookingData = {
+            userId: user.id,
+            roomTypeId: parseInt(roomTypeId),
+            startDate: checkIn,
+            endDate: checkOut,
+            numRooms: roomCount,
+            guestName: guestName,
+            amount: totalAmount
+          };
+
+          console.log("Sending booking data:", bookingData); // Debug
+
+          return fetch("/api/bookings/confirm", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(bookingData)
+          });
+        })
+        .then(response => {
+          if (!response || !response.ok) throw new Error("Booking failed.");
+          return response.text();
+        })
+        .then(() => {
+          alert("Booking confirmed!");
+          window.location.href = "user.html";
+        })
+        .catch(err => {
+          console.error(err);
+          alert("Error: " + err.message);
+        });
+    }
+
+    function cancelBooking() {
+      window.location.href = "rooms.html";
+    }
+  </script>
+</body>
+</html>

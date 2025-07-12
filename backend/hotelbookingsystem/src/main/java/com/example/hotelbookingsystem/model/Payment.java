@@ -1,4 +1,3 @@
-// Payment.java
 package com.example.hotelbookingsystem.model;
 
 import jakarta.persistence.*;
@@ -13,31 +12,29 @@ public class Payment {
     @Column(name = "payment_id")
     private Long id;
 
-    @OneToOne
-    @JoinColumn(name = "booking_id", referencedColumnName = "booking_id")
-    private Booking booking;
+    @Column(name = "booking_id", nullable = false)
+    private Long bookingId;
 
-    @Column(name = "payment_date")
+    @Column(name = "payment_date", nullable = false)
     private LocalDate paymentDate;
 
-    @Column(name = "amount")
-    private Double totalPrice;
+    @Column(nullable = false)
+    private double amount;
 
-    @Column(name = "payment_status")
-    private String paymentStatus; // e.g., "pending", "completed", "failed"
+    @Column(name = "payment_status", nullable = false)
+    private String paymentStatus;
 
-    public Payment() {}
-
+    // Getters and setters
     public Long getId() {
         return id;
     }
 
-    public Booking getBooking() {
-        return booking;
+    public Long getBookingId() {
+        return bookingId;
     }
 
-    public void setBooking(Booking booking) {
-        this.booking = booking;
+    public void setBookingId(Long bookingId) {
+        this.bookingId = bookingId;
     }
 
     public LocalDate getPaymentDate() {
@@ -48,12 +45,12 @@ public class Payment {
         this.paymentDate = paymentDate;
     }
 
-    public Double getTotalPrice() {
-        return totalPrice;
+    public double getAmount() {
+        return amount;
     }
 
-    public void setTotalPrice(Double totalPrice) {
-        this.totalPrice = totalPrice;
+    public void setAmount(double amount) {
+        this.amount = amount;
     }
 
     public String getPaymentStatus() {

@@ -21,13 +21,43 @@
       margin: 60px auto;
     }
 
-    input, button {
-      margin: 10px;
+    .filter-row {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin: 10px 0;
+    }
+
+    input, select, button {
       padding: 10px;
       border-radius: 5px;
       border: none;
       width: 200px;
       font-size: 1em;
+      font-family: 'Segoe UI', monospace;
+      background-color: rgba(255, 255, 255, 0.2);
+      color: white;
+      backdrop-filter: blur(4px);
+      transition: background-color 0.3s ease;
+    }
+
+    input::placeholder {
+      color: #ccc;
+    }
+
+    select {
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    select option {
+      color: black;
+    }
+
+    select:focus, input:focus {
+      outline: none;
+      background-color: rgba(255, 255, 255, 0.3);
     }
 
     button {
@@ -49,12 +79,12 @@
     }
 
     .room-card img {
-    width: 300px;       /* fixed width */
-    height: 200px;      /* fixed height */
-    object-fit: cover;  /* crop the image to fit container */
-    border-radius: 10px;
-    display: block;
-    margin: 0 auto;
+      width: 300px;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 10px;
+      display: block;
+      margin: 0 auto;
     }
 
     .room-card h3, .room-card p {
@@ -66,17 +96,57 @@
 
   <div class="container">
     <h1>Check Room Availability</h1>
-    <input type="date" id="checkIn" />
-    <input type="date" id="checkOut" />
-    <button onclick="searchRooms()">Search Availability</button>
 
+    <div class="filter-row">
+      <input type="date" id="checkIn" />
+      <input type="date" id="checkOut" />
+    </div>
+
+    <div class="filter-row">
+      <select id="capacityFilter">
+        <option value="">Any Capacity</option>
+        <option value="1">1 Person</option>
+        <option value="2">2 People</option>
+        <option value="3">3 People</option>
+        <option value="4">4 People</option>
+      </select>
+
+      <select id="typeFilter">
+        <option value="">Any Type</option>
+        <option value="Standard">Standard</option>
+        <option value="Suite">Suite</option>
+        <option value="Deluxe">Deluxe</option>
+      </select>
+
+      <select id="roomCountFilter">
+        <option value="1">1 Room</option>
+        <option value="2">2 Rooms</option>
+        <option value="3">3 Rooms</option>
+        <option value="4">4 Rooms</option>
+      </select>
+    </div>
+
+    <div class="filter-row">
+      <button onclick="searchRooms()">Search</button>
+    </div>
+    <div class="filter-row">
+      <button id="backButton">Back</button>
+    </div>
     <div id="roomResults"></div>
   </div>
 
   <script>
+    const roomTypeIdMap = {
+      "Standard": 1,
+      "Deluxe": 2,
+      "Suite": 3
+    };
     async function searchRooms() {
       const checkIn = document.getElementById("checkIn").value;
       const checkOut = document.getElementById("checkOut").value;
+      const capacity = document.getElementById("capacityFilter").value;
+      const type = document.getElementById("typeFilter").value;
+      const roomCount = document.getElementById("roomCountFilter").value;
 
       if (!checkIn || !checkOut || checkIn >= checkOut) {
         alert("Please select valid check-in and check-out dates.");
@@ -84,14 +154,21 @@
       }
 
       try {
-        const res = await fetch(`http://localhost:8080/api/rooms/available?checkIn=${checkIn}&checkOut=${checkOut}`);
+        const url = new URL("http://localhost:8080/api/rooms/available");
+        url.searchParams.append("checkIn", checkIn);
+        url.searchParams.append("checkOut", checkOut);
+        if (capacity) url.searchParams.append("capacity", capacity);
+        if (type) url.searchParams.append("type", type);
+        if (roomCount) url.searchParams.append("roomCount", roomCount);
+
+        const res = await fetch(url);
         const rooms = await res.json();
 
         const resultContainer = document.getElementById("roomResults");
         resultContainer.innerHTML = "";
 
         if (rooms.length === 0) {
-          resultContainer.innerHTML = "<p>No rooms available for selected dates.</p>";
+          resultContainer.innerHTML = "<p>No rooms available for selected filters.</p>";
           return;
         }
 
@@ -103,7 +180,8 @@
             <h3>${room.roomType}</h3>
             <p>${room.description}</p>
             <p><strong>Price:</strong> $${room.price} per night</p>
-            <button onclick="bookRoom(${room.roomId})">Book Now</button>
+            <p><strong>${room.availableCount} room(s) available</strong></p>
+            <button onclick="bookRoom(${roomTypeIdMap[room.roomType]}, '${room.roomType}', ${room.price}, '${checkIn}', '${checkOut}', ${room.availableCount})">Book Now</button>
           `;
           resultContainer.appendChild(card);
         });
@@ -114,20 +192,28 @@
       }
     }
 
-    function bookRoom(roomId) {
-        const user = localStorage.getItem("username");
-        if (!user) {
-            alert("Please log in to continue booking.");
-            window.location.href = "index.html";
-            return;
-        }
+    function bookRoom(roomTypeId, roomType, price, checkIn, checkOut, availableCount) {
+      const user = localStorage.getItem("username");
+      if (!user) {
+        alert("Please log in to continue booking.");
+        window.location.href = "index.html";
+        return;
+      }
 
-        // Proceed to booking (later you can redirect to booking form)
-        alert(`Proceeding to book Room ID: ${roomId}`);
-        // Example: window.location.href = `booking.html?roomId=${roomId}&checkIn=${checkIn}&checkOut=${checkOut}`;
+      const url = `booking.html?roomTypeId=${roomTypeId}&roomType=${encodeURIComponent(roomType)}&price=${price}&checkIn=${checkIn}&checkOut=${checkOut}&available=${availableCount}`;
+      window.location.href = url;
     }
 
+    window.onload = function () {
+      const today = new Date().toISOString().split("T")[0];
+      document.getElementById("checkIn").min = today;
+      document.getElementById("checkOut").min = today;
+    };
 
+    document.getElementById("backButton").onclick = function () {
+      const user = localStorage.getItem("username");
+      window.location.href = user ? "user.html" : "index.html";
+    };
   </script>
 
 </body>
