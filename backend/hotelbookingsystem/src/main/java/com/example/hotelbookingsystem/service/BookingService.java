@@ -63,4 +63,9 @@ public class BookingService {
     public Booking saveBooking(Booking booking) {
         return bookingRepository.save(booking);
     }
+
+    // ✅ New method for admin.html to get all bookings
+    public List<Booking> getAllBookings() {
+        return bookingRepository.findAll();
+    }
 }

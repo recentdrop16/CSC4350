@@ -31,4 +31,10 @@ public class BookingController {
         Booking saved = bookingService.saveBooking(request);
         return ResponseEntity.ok("Booking ID: " + saved.getId() + " saved.");
     }
+
+    // ✅ New endpoint added for admin.html to load all bookings
+    @GetMapping
+    public List<Booking> getAllBookings() {
+        return bookingService.getAllBookings();
+    }
 }

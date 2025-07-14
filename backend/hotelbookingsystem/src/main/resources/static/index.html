@@ -144,7 +144,7 @@
           return;
         }
 
-        if (user.role === 1) {
+        if (user.role == 1) {
           window.location.href = "admin.html";
         } else {
           localStorage.setItem("username", user.username);
