@@ -1,0 +1,4 @@
+"room_type_id","room_type","price","capacity","description","discount","image_url","total_rooms"
+1,Standard,100.00,2,Simple standard room with one queen bed or 2 single beds,0.00,images/standard.jpg,5
+2,Deluxe,150.00,3,Spacious room with a king bed and a sofa bed,10.00,images/deluxe.jpg,5
+3,Suite,250.00,4,Luxury suite with ocean view and living area.,15.00,images/suite.jpg,5

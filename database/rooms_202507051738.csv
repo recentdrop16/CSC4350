@@ -1,4 +1,0 @@
-"room_id","room_type","price","availability","description","discount","image_url"
-1,Standard,100.00,1,Simple standard room with one queen bed.,0.00,images/standard.jpg
-2,Deluxe,150.00,1,Spacious room with a king bed and balcony.,10.00,images/deluxe.jpg
-3,Suite,250.00,1,Luxury suite with ocean view and living area.,15.00,images/suite.jpg

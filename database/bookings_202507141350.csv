@@ -1,0 +1,8 @@
+"booking_id","user_id","room_type_id","start_date","end_date","num_rooms","guest_name","booking_status"
+1,4,1,"2025-07-11","2025-07-12",2,Alice Smith,booked
+2,4,2,"2025-07-11","2025-07-12",3,Bob Johnson,booked
+3,4,3,"2025-07-11","2025-07-12",3,Charlie Lee,booked
+4,4,1,"2025-07-11","2025-07-12",3,Alice Smith,cancelled
+5,4,2,"2025-07-11","2025-07-12",2,Bob Johnson,booked
+6,4,1,"2025-07-11","2025-07-12",3,vu dao,booked
+7,4,1,"2025-07-14","2025-07-15",3,vu,booked
