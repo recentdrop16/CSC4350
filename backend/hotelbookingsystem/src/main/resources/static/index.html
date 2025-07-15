@@ -143,8 +143,9 @@
           alert("Incorrect password.");
           return;
         }
-
+        
         if (user.role == 1) {
+          localStorage.setItem("username", user.username);
           window.location.href = "admin.html";
         } else {
           localStorage.setItem("username", user.username);
