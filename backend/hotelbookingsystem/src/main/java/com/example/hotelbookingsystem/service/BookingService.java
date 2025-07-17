@@ -2,9 +2,11 @@ package com.example.hotelbookingsystem.service;
 
 import com.example.hotelbookingsystem.dto.BookingRequest;
 import com.example.hotelbookingsystem.model.Booking;
+import com.example.hotelbookingsystem.model.Payment;
 import com.example.hotelbookingsystem.model.RoomType;
 import com.example.hotelbookingsystem.model.User;
 import com.example.hotelbookingsystem.repository.BookingRepository;
+import com.example.hotelbookingsystem.repository.PaymentRepository;
 import com.example.hotelbookingsystem.repository.RoomTypeRepository;
 import com.example.hotelbookingsystem.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,14 +20,16 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
     private final RoomTypeRepository roomTypeRepository;
-
+    private final PaymentRepository paymentRepository;
     @Autowired
     public BookingService(BookingRepository bookingRepository,
                           UserRepository userRepository,
-                          RoomTypeRepository roomTypeRepository) {
+                          RoomTypeRepository roomTypeRepository,
+                          PaymentRepository paymentRepository) {
         this.bookingRepository = bookingRepository;
         this.userRepository = userRepository;
         this.roomTypeRepository = roomTypeRepository;
+        this.paymentRepository = paymentRepository;
     }
 
     public List<Booking> getBookingsByUsername(String username) {
@@ -57,7 +61,16 @@ public class BookingService {
         booking.setGuestName(request.getGuestName());
         booking.setBookingStatus("booked");
 
-        return bookingRepository.save(booking);
+        Booking savedBooking = bookingRepository.save(booking);
+        Payment payment = new Payment();
+        payment.setBookingId(savedBooking.getId());
+        payment.setPaymentDate(java.time.LocalDate.now());
+        payment.setAmount(request.getAmount());  // Already calculated total price
+        payment.setPaymentStatus("completed"); // Set as 'completed' for now
+
+        paymentRepository.save(payment);
+
+        return savedBooking;
     }
 
     public Booking saveBooking(Booking booking) {
@@ -68,4 +81,5 @@ public class BookingService {
     public List<Booking> getAllBookings() {
         return bookingRepository.findAll();
     }
+
 }
