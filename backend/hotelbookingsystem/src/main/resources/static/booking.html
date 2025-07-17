@@ -14,10 +14,10 @@
     }
 
     .container {
-      background-color: rgba(0,0,0,0.6);
+      background-color: rgba(0, 0, 0, 0.6);
       padding: 40px;
       border-radius: 15px;
-      max-width: 600px;
+      max-width: 800px;
       margin: 60px auto;
     }
 
@@ -62,12 +62,34 @@
       background-color: #ccc;
     }
 
-    .summary {
-      text-align: left;
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 30px;
       background: rgba(255, 255, 255, 0.1);
       padding: 20px;
       border-radius: 10px;
       margin-bottom: 20px;
+      flex-wrap: wrap;
+      text-align: left;
+    }
+
+    .summary-box, .policy-box {
+      flex: 1 1 45%;
+    }
+
+    .section-header {
+      font-size: 1.25em;
+      font-weight: bold;
+      color: #ffd166;
+      border-bottom: 1px solid #ffd166;
+      padding-bottom: 5px;
+      margin-bottom: 10px;
+    }
+
+    .policy-list p {
+      margin: 6px 0;
+      font-size: 0.95em;
     }
 
     .button-row {
@@ -76,18 +98,40 @@
       gap: 20px;
       margin-top: 30px;
     }
+
+    @media (max-width: 768px) {
+      .summary-row {
+        flex-direction: column;
+      }
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Confirm Your Booking</h1>
 
-    <div class="summary">
-      <p><strong>Room Type:</strong> <span id="roomType"></span></p>
-      <p><strong>Check-In:</strong> <span id="checkIn"></span></p>
-      <p><strong>Check-Out:</strong> <span id="checkOut"></span></p>
-      <p><strong>Price per Night:</strong> $<span id="pricePerNight"></span></p>
-      <p><strong>Number of Nights:</strong> <span id="nights"></span></p>
+    <div class="summary-row">
+      <div class="summary-box">
+        <div class="section-header">Booking Summary</div>
+        <p><strong>Room Type:</strong> <span id="roomType"></span></p>
+        <p><strong>Check-In:</strong> <span id="checkIn"></span></p>
+        <p><strong>Check-Out:</strong> <span id="checkOut"></span></p>
+        <p><strong>Price per Night:</strong> $<span id="pricePerNight"></span></p>
+        <p><strong>Number of Nights:</strong> <span id="nights"></span></p>
+      </div>
+
+      <div class="policy-box">
+        <div class="section-header">Hotel Policies</div>
+        <div class="policy-list">
+          <p>Check-in time: 3:00 PM</p>
+          <p>Check-out time: 11:00 AM</p>
+          <p>No smoking in rooms</p>
+          <p>No pets allowed</p>
+          <p>Government-issued ID required</p>
+          <p>Free cancellation up to 24h prior</p>
+          <p>Breakfast: 7:00 – 10:00 AM</p>
+        </div>
+      </div>
     </div>
 
     <label for="guestName">Guest Full Name:</label>
@@ -124,32 +168,27 @@
 
     const username = localStorage.getItem("username");
 
-    // Redirect to login if user not found
     if (!username) {
       alert("Please log in.");
       window.location.href = "index.html";
     }
 
-    // Validate required params
     if (!roomTypeId || isNaN(parseInt(roomTypeId))) {
       alert("Missing or invalid room type ID.");
       window.location.href = "rooms.html";
     }
 
-    // Display room info
     document.getElementById("roomType").innerText = roomType;
     document.getElementById("checkIn").innerText = checkIn;
     document.getElementById("checkOut").innerText = checkOut;
     document.getElementById("pricePerNight").innerText = pricePerNight.toFixed(2);
 
-    // Calculate nights
     const nights = (new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24);
     document.getElementById("nights").innerText = nights;
 
     const totalPriceElement = document.getElementById("totalPrice");
     const roomCountSelect = document.getElementById("roomCount");
 
-    // Populate room count dropdown
     for (let i = 1; i <= Math.min(available, 4); i++) {
       const option = document.createElement("option");
       option.value = i;
@@ -193,8 +232,6 @@
             guestName: guestName,
             amount: totalAmount
           };
-
-          console.log("Sending booking data:", bookingData); // Debug
 
           return fetch("/api/bookings/confirm", {
             method: "POST",
