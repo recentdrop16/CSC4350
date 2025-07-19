@@ -47,5 +47,4 @@ public class AvailableRoomDTO {
         return availableCount;
     }
 
-    // Getters
 }

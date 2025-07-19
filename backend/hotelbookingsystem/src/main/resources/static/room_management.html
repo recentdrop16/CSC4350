@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Room Management - Weeb Hotel</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: url("images/background.jpg") no-repeat center center fixed;
+      background-size: cover;
+      color: white;
+      margin: 0;
+    }
+
+    .container {
+      background-color: rgba(0, 0, 0, 0.7);
+      padding: 40px;
+      max-width: 1100px;
+      margin: 60px auto;
+      border-radius: 15px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      padding: 12px;
+      border: 1px solid white;
+      text-align: center;
+    }
+
+    th {
+      background-color: #0077b6;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 8px;
+      border-radius: 5px;
+      margin: 5px 0;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      margin-top: 10px;
+      background-color: #00b4d8;
+      color: black;
+      font-weight: bold;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      background-color: #90e0ef;
+    }
+
+    .section {
+      margin-bottom: 40px;
+    }
+    label {
+      display: block;
+      margin-top: 12px;
+      margin-bottom: 4px;
+      font-weight: bold;
+      text-align: left;
+    }    
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Room Inventory Management</h1>
+
+    <!-- Room Type Management -->
+    <div class="section">
+      <h2>Manage Room Types</h2>
+  <form id="roomTypeForm">
+    <input type="hidden" id="roomTypeId" />
+
+    <label for="roomType">Room Type (e.g., Deluxe)</label>
+    <input type="text" id="roomType" required />
+
+    <label for="price">Price per Night ($)</label>
+    <input type="number" id="price" required />
+
+    <label for="capacity">Capacity (number of guests)</label>
+    <input type="number" id="capacity" required />
+
+    <label for="discount">Discount (%)</label>
+    <input type="number" id="discount" />
+
+    <label for="imageUrl">Image URL</label>
+    <input type="text" id="imageUrl" />
+
+    <label for="description">Room Description</label>
+    <input type="text" id="description" />
+
+    <label for="totalRooms">Total Rooms</label>
+    <input type="number" id="totalRooms" required />
+
+    <button class="btn" type="submit">Save Room Type</button>
+  </form>
+
+
+      <table id="roomTypeTable">
+        <thead>
+          <tr>
+            <th>Type</th><th>Price</th><th>Capacity</th><th>Discount</th><th>Description</th><th>Total Rooms</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+        
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Room List Management -->
+    <div class="section">
+      <h2>Manage Physical Rooms</h2>
+      <form id="roomListForm">
+        <input type="hidden" id="roomId" />
+        <input type="text" placeholder="Room ID (e.g., 101)" id="roomCode" required />
+        <select id="roomTypeSelect" required>
+          <option value="">Select Room Type</option>
+        </select>
+        <button class="btn" type="submit">Save Room</button>
+      </form>
+
+      <table id="roomListTable">
+        <thead>
+          <tr>
+            <th>Room ID</th><th>Room Type</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+        
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+<script>
+const roomTypeForm = document.getElementById("roomTypeForm");
+const roomTypeTableBody = document.querySelector("#roomTypeTable tbody");
+
+const apiBase = "/api/roomtypes"; 
+
+
+window.onload = () => {
+  loadRoomTypes();
+  loadRoomList();
+};
+
+function loadRoomTypes() {
+  fetch(apiBase)
+    .then(res => res.json())
+    .then(data => {
+      roomTypeTableBody.innerHTML = ""; 
+      data.forEach(roomType => {
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+          <td>${roomType.roomType}</td>
+          <td>$${roomType.price}</td>
+          <td>${roomType.capacity}</td>
+          <td>${roomType.discount}%</td>
+          <td>${roomType.description}</td>
+           <td>${roomType.totalRooms}</td>
+          <td>
+            <button onclick='editRoomType(${JSON.stringify(roomType)})'>✏️</button>
+            <button onclick='deleteRoomType(${roomType.id})'>🗑️</button>
+          </td>
+        `;
+
+        roomTypeTableBody.appendChild(tr);
+      });
+
+      populateRoomTypeDropdown(data); 
+    })
+    .catch(err => console.error("Failed to load room types", err));
+}
+
+function populateRoomTypeDropdown(roomTypes) {
+  const dropdown = document.getElementById("roomTypeSelect");
+  if (!dropdown) return;
+  dropdown.innerHTML = `<option value="">Select Room Type</option>`;
+  roomTypes.forEach(rt => {
+    const opt = document.createElement("option");
+    opt.value = rt.id;
+    opt.textContent = rt.roomType;
+    dropdown.appendChild(opt);
+  });
+}
+
+
+roomTypeForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+
+const payload = {
+  roomType: document.getElementById("roomType").value,
+  price: parseFloat(document.getElementById("price").value),
+  capacity: parseInt(document.getElementById("capacity").value),
+  description: document.getElementById("description").value,
+  discount: parseFloat(document.getElementById("discount").value) || 0,
+  imageUrl: document.getElementById("imageUrl").value,
+  totalRooms: parseInt(document.getElementById("totalRooms").value)
+};
+
+
+  const id = document.getElementById("roomTypeId").value;
+  const method = id ? "PUT" : "POST";
+  const url = id ? `${apiBase}/${id}` : apiBase;
+
+  fetch(url, {
+    method: method,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  })
+    .then(res => {
+      if (!res.ok) throw new Error("Failed to save");
+      return res.json();
+    })
+    .then(() => {
+      alert("Room type saved!");
+      roomTypeForm.reset();
+      document.getElementById("roomTypeId").value = "";
+      loadRoomTypes();
+    })
+    .catch(err => alert("Error saving room type: " + err.message));
+});
+
+function editRoomType(roomType) {
+  document.getElementById("roomTypeId").value = roomType.id;
+  document.getElementById("roomType").value = roomType.roomType;
+  document.getElementById("price").value = roomType.price;
+  document.getElementById("capacity").value = roomType.capacity;
+  document.getElementById("totalRooms").value = roomType.totalRooms;
+  document.getElementById("description").value = roomType.description;
+  document.getElementById("discount").value = roomType.discount;
+  document.getElementById("imageUrl").value = roomType.imageUrl;
+}
+
+function deleteRoomType(id) {
+  if (!confirm("Are you sure you want to delete this room type?")) return;
+
+  fetch(`${apiBase}/${id}`, { method: "DELETE" })
+    .then(res => {
+      if (!res.ok) throw new Error("Failed to delete");
+      loadRoomTypes();
+    })
+    .catch(err => alert("Error deleting room type: " + err.message));
+}
+
+const roomListForm = document.getElementById("roomListForm");
+const roomListTableBody = document.querySelector("#roomListTable tbody");
+const roomListApi = "/api/roomlist"; 
+
+function loadRoomList() {
+  fetch(roomListApi)
+    .then(res => res.json())
+    .then(data => {
+      roomListTableBody.innerHTML = "";
+      data.forEach(room => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${room.roomId}</td>
+          <td>${room.roomType.roomType}</td>
+          <td>
+            <button onclick='deleteRoom(${room.roomId})'>🗑️</button>
+          </td>
+        `;
+        roomListTableBody.appendChild(tr);
+      });
+    })
+    .catch(err => console.error("Failed to load RoomList", err));
+}
+
+
+roomListForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+
+  const payload = {
+    roomId: parseInt(document.getElementById("roomCode").value),
+    roomType: {
+      id: parseInt(document.getElementById("roomTypeSelect").value)
+    }
+  };
+
+  const editId = document.getElementById("roomId").value;
+  const method = editId ? "PUT" : "POST";
+  const url = editId ? `${roomListApi}/${editId}` : roomListApi;
+ 
+  const existingRoomIds = [...roomListTableBody.querySelectorAll("tr")].map(tr =>
+    tr.children[0].textContent.trim()
+  );
+
+  const roomIdInput = document.getElementById("roomCode").value;
+  if (existingRoomIds.includes(roomIdInput)) {
+    alert("Room ID already exists. Please choose a unique room number.");
+    return;
+  }
+  fetch(url, {
+    method: method,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  })
+    .then(res => {
+      if (!res.ok) throw new Error("Failed to save room");
+      return res.json();
+    })
+    .then(() => {
+      alert("Room saved!");
+      roomListForm.reset();
+      document.getElementById("roomId").value = "";
+      loadRoomList();
+      loadRoomTypes();
+    })
+    .catch(err => alert("Error saving room: " + err.message));
+});
+
+
+function deleteRoom(id) {
+  if (!confirm("Delete this room?")) return;
+
+  fetch(`${roomListApi}/${id}`, { method: "DELETE" })
+    .then(res => {
+      if (!res.ok) throw new Error("Failed to delete");
+      loadRoomList();
+      loadRoomTypes();
+    })
+    .catch(err => alert("Error deleting room: " + err.message));
+}
+</script>
+
+</body>
+</html>
