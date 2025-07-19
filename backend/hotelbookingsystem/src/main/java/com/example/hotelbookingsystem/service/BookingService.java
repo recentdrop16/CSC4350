@@ -47,12 +47,25 @@ public class BookingService {
         if (request.getRoomTypeId() == null) {
             throw new IllegalArgumentException("Room Type ID must not be null");
         }
+        if (request.getStartDate().isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException("Cannot book a past date.");
+        }
+        if (request.getNumRooms() <= 0) {
+            throw new IllegalArgumentException("Number of rooms must be at least 1.");
+        }
 
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         RoomType roomType = roomTypeRepository.findById(request.getRoomTypeId())
                 .orElseThrow(() -> new IllegalArgumentException("Room type not found"));
+
+        int booked = bookingRepository.countBookedRooms(roomType.getId(), request.getStartDate(), request.getEndDate());
+        int available = roomType.getTotalRooms() - booked;
+
+        if (request.getNumRooms() > available) {
+            throw new IllegalArgumentException("Not enough rooms available.");
+        }
 
         Booking booking = new Booking();
         booking.setUser(user);
@@ -77,34 +90,6 @@ public class BookingService {
     }
 
     public Booking saveBooking(Booking booking) {
-        LocalDate today = LocalDate.now();
-
-        if (booking.getStartDate().isBefore(today) || booking.getEndDate().isBefore(today)) {
-            throw new IllegalArgumentException("Booking dates cannot be in the past.");
-        }
-
-        if (booking.getEndDate().isBefore(booking.getStartDate())) {
-            throw new IllegalArgumentException("End date cannot be before start date.");
-        }
-
-        RoomType roomType = roomTypeRepository.findById(booking.getRoomType().getId())
-                .orElseThrow(() -> new IllegalArgumentException("Room type not found."));
-
-        List<Booking> overlapping = bookingRepository.findAll().stream()
-                .filter(b ->
-                        !b.getId().equals(booking.getId()) &&
-                        b.getRoomType().getId().equals(roomType.getId()) &&
-                        !(booking.getEndDate().isBefore(b.getStartDate()) || booking.getStartDate().isAfter(b.getEndDate()))
-                )
-                .toList();
-
-        int totalBooked = overlapping.stream().mapToInt(Booking::getNumRooms).sum();
-        int available = roomType.getTotalRooms() - totalBooked;
-
-        if (booking.getNumRooms() > available) {
-            throw new IllegalArgumentException("Not enough rooms available for the selected date range.");
-        }
-
         return bookingRepository.save(booking);
     }
 
@@ -120,6 +105,27 @@ public class BookingService {
         Booking existing = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new IllegalArgumentException("Booking not found"));
 
+        if (updatedBooking.getStartDate().isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException("Cannot book a past date.");
+        }
+        if (updatedBooking.getNumRooms() <= 0) {
+            throw new IllegalArgumentException("Number of rooms must be at least 1.");
+        }
+
+        RoomType roomType = updatedBooking.getRoomType() != null ? 
+                            updatedBooking.getRoomType() : existing.getRoomType();
+
+        int booked = bookingRepository.countBookedRooms(roomType.getId(),
+                updatedBooking.getStartDate(), updatedBooking.getEndDate());
+
+        // Subtract this booking’s own rooms from total before comparison
+        int adjusted = booked - existing.getNumRooms();
+        int available = roomType.getTotalRooms() - adjusted;
+
+        if (updatedBooking.getNumRooms() > available) {
+            throw new IllegalArgumentException("Not enough rooms available for update.");
+        }
+
         existing.setStartDate(updatedBooking.getStartDate());
         existing.setEndDate(updatedBooking.getEndDate());
         existing.setNumRooms(updatedBooking.getNumRooms());
@@ -134,6 +140,6 @@ public class BookingService {
             existing.setUser(updatedBooking.getUser());
         }
 
-        return saveBooking(existing);
+        return bookingRepository.save(existing);
     }
 }
