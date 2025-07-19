@@ -12,6 +12,7 @@ import com.example.hotelbookingsystem.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -21,6 +22,7 @@ public class BookingService {
     private final UserRepository userRepository;
     private final RoomTypeRepository roomTypeRepository;
     private final PaymentRepository paymentRepository;
+
     @Autowired
     public BookingService(BookingRepository bookingRepository,
                           UserRepository userRepository,
@@ -62,11 +64,12 @@ public class BookingService {
         booking.setBookingStatus("booked");
 
         Booking savedBooking = bookingRepository.save(booking);
+
         Payment payment = new Payment();
         payment.setBookingId(savedBooking.getId());
-        payment.setPaymentDate(java.time.LocalDate.now());
-        payment.setAmount(request.getAmount());  // Already calculated total price
-        payment.setPaymentStatus("completed"); // Set as 'completed' for now
+        payment.setPaymentDate(LocalDate.now());
+        payment.setAmount(request.getAmount());
+        payment.setPaymentStatus("completed");
 
         paymentRepository.save(payment);
 
@@ -77,9 +80,32 @@ public class BookingService {
         return bookingRepository.save(booking);
     }
 
-    // ✅ New method for admin.html to get all bookings
     public List<Booking> getAllBookings() {
         return bookingRepository.findAll();
     }
 
+    public void deleteBooking(Long bookingId) {
+        bookingRepository.deleteById(bookingId);
+    }
+
+    public Booking updateBooking(Long bookingId, Booking updatedBooking) {
+        Booking existing = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new IllegalArgumentException("Booking not found"));
+
+        existing.setStartDate(updatedBooking.getStartDate());
+        existing.setEndDate(updatedBooking.getEndDate());
+        existing.setNumRooms(updatedBooking.getNumRooms());
+        existing.setGuestName(updatedBooking.getGuestName());
+        existing.setBookingStatus(updatedBooking.getBookingStatus());
+
+        if (updatedBooking.getRoomType() != null) {
+            existing.setRoomType(updatedBooking.getRoomType());
+        }
+
+        if (updatedBooking.getUser() != null) {
+            existing.setUser(updatedBooking.getUser());
+        }
+
+        return bookingRepository.save(existing);
+    }
 }

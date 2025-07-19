@@ -32,9 +32,20 @@ public class BookingController {
         return ResponseEntity.ok("Booking ID: " + saved.getId() + " saved.");
     }
 
-    // ✅ New endpoint added for admin.html to load all bookings
     @GetMapping
     public List<Booking> getAllBookings() {
         return bookingService.getAllBookings();
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteBooking(@PathVariable Long id) {
+        bookingService.deleteBooking(id);
+        return ResponseEntity.ok("Booking deleted successfully.");
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<String> updateBooking(@PathVariable Long id, @RequestBody Booking updatedBooking) {
+        Booking saved = bookingService.updateBooking(id, updatedBooking);
+        return ResponseEntity.ok("Booking ID: " + saved.getId() + " updated successfully.");
     }
 }

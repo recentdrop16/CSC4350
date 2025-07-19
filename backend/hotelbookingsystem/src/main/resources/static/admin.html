@@ -1,3 +1,6 @@
+**Updated: admin.html**
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -36,7 +39,26 @@
       background-color: #0077b6;
     }
 
-    button {
+    .actions button {
+      margin: 0 5px;
+      padding: 6px 10px;
+      font-size: 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .edit-btn {
+      background-color: #ffc107;
+      color: black;
+    }
+
+    .delete-btn {
+      background-color: #dc3545;
+      color: white;
+    }
+
+    button.logout {
       padding: 10px 20px;
       border: none;
       border-radius: 5px;
@@ -45,10 +67,6 @@
       font-weight: bold;
       cursor: pointer;
       margin-top: 20px;
-    }
-
-    button:hover {
-      background-color: #ddd;
     }
   </style>
 </head>
@@ -67,6 +85,7 @@
           <th>Guest Name</th>
           <th>Rooms</th>
           <th>Status</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody id="bookingTable">
@@ -74,7 +93,7 @@
       </tbody>
     </table>
 
-    <button onclick="logout()">Logout</button>
+    <button class="logout" onclick="logout()">Logout</button>
   </div>
 
   <script>
@@ -84,7 +103,6 @@
       window.location.href = "index.html";
     }
 
-    // Fetch all bookings
     fetch("http://localhost:8080/api/bookings")
       .then(res => res.json())
       .then(bookings => {
@@ -102,6 +120,10 @@
             <td>${b.guestName}</td>
             <td>${b.numRooms}</td>
             <td>${b.bookingStatus}</td>
+            <td class="actions">
+              <button class="edit-btn" onclick="editBooking(${b.id})">Edit</button>
+              <button class="delete-btn" onclick="deleteBooking(${b.id})">Delete</button>
+            </td>
           `;
           table.appendChild(row);
         });
@@ -115,6 +137,19 @@
       localStorage.removeItem("username");
       window.location.href = "index.html";
     }
+
+    function deleteBooking(id) {
+      if (!confirm("Are you sure you want to delete this booking?")) return;
+      fetch(`http://localhost:8080/api/bookings/${id}`, {
+        method: 'DELETE'
+      }).then(() => location.reload());
+    }
+
+    function editBooking(id) {
+      window.location.href = `edit-booking.html?bookingId=${id}`;
+    }
   </script>
+  <script src="admin.js"></script>
 </body>
 </html>
+```
