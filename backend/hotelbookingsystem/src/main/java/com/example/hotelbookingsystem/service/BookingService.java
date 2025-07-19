@@ -77,6 +77,34 @@ public class BookingService {
     }
 
     public Booking saveBooking(Booking booking) {
+        LocalDate today = LocalDate.now();
+
+        if (booking.getStartDate().isBefore(today) || booking.getEndDate().isBefore(today)) {
+            throw new IllegalArgumentException("Booking dates cannot be in the past.");
+        }
+
+        if (booking.getEndDate().isBefore(booking.getStartDate())) {
+            throw new IllegalArgumentException("End date cannot be before start date.");
+        }
+
+        RoomType roomType = roomTypeRepository.findById(booking.getRoomType().getId())
+                .orElseThrow(() -> new IllegalArgumentException("Room type not found."));
+
+        List<Booking> overlapping = bookingRepository.findAll().stream()
+                .filter(b ->
+                        !b.getId().equals(booking.getId()) &&
+                        b.getRoomType().getId().equals(roomType.getId()) &&
+                        !(booking.getEndDate().isBefore(b.getStartDate()) || booking.getStartDate().isAfter(b.getEndDate()))
+                )
+                .toList();
+
+        int totalBooked = overlapping.stream().mapToInt(Booking::getNumRooms).sum();
+        int available = roomType.getTotalRooms() - totalBooked;
+
+        if (booking.getNumRooms() > available) {
+            throw new IllegalArgumentException("Not enough rooms available for the selected date range.");
+        }
+
         return bookingRepository.save(booking);
     }
 
@@ -106,6 +134,6 @@ public class BookingService {
             existing.setUser(updatedBooking.getUser());
         }
 
-        return bookingRepository.save(existing);
+        return saveBooking(existing);
     }
 }
