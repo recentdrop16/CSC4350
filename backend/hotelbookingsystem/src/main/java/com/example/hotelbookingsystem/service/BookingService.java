@@ -47,12 +47,6 @@ public class BookingService {
         if (request.getRoomTypeId() == null) {
             throw new IllegalArgumentException("Room Type ID must not be null");
         }
-        if (request.getStartDate().isBefore(LocalDate.now())) {
-            throw new IllegalArgumentException("Cannot book a past date.");
-        }
-        if (request.getNumRooms() <= 0) {
-            throw new IllegalArgumentException("Number of rooms must be at least 1.");
-        }
 
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
@@ -60,11 +54,17 @@ public class BookingService {
         RoomType roomType = roomTypeRepository.findById(request.getRoomTypeId())
                 .orElseThrow(() -> new IllegalArgumentException("Room type not found"));
 
-        int booked = bookingRepository.countBookedRooms(roomType.getId(), request.getStartDate(), request.getEndDate());
-        int available = roomType.getTotalRooms() - booked;
+        if (request.getStartDate().isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException("Cannot Modify Bookings In The Past");
+        }
 
-        if (request.getNumRooms() > available) {
-            throw new IllegalArgumentException("Not enough rooms available.");
+        int bookedRooms = bookingRepository.countBookedRooms(roomType.getId(), request.getStartDate(), request.getEndDate());
+        if (bookedRooms + request.getNumRooms() > roomType.getTotalRooms()) {
+            throw new IllegalArgumentException("Not Enough Room");
+        }
+
+        if (request.getNumRooms() <= 0) {
+            throw new IllegalArgumentException("Invalid number of rooms");
         }
 
         Booking booking = new Booking();
@@ -106,24 +106,21 @@ public class BookingService {
                 .orElseThrow(() -> new IllegalArgumentException("Booking not found"));
 
         if (updatedBooking.getStartDate().isBefore(LocalDate.now())) {
-            throw new IllegalArgumentException("Cannot book a past date.");
+            throw new IllegalArgumentException("Cannot Modify Bookings In The Past");
         }
+
         if (updatedBooking.getNumRooms() <= 0) {
-            throw new IllegalArgumentException("Number of rooms must be at least 1.");
+            throw new IllegalArgumentException("Invalid number of rooms");
         }
 
-        RoomType roomType = updatedBooking.getRoomType() != null ? 
-                            updatedBooking.getRoomType() : existing.getRoomType();
+        RoomType roomType = updatedBooking.getRoomType() != null ? updatedBooking.getRoomType() : existing.getRoomType();
 
-        int booked = bookingRepository.countBookedRooms(roomType.getId(),
-                updatedBooking.getStartDate(), updatedBooking.getEndDate());
+        int bookedRooms = bookingRepository.countBookedRooms(roomType.getId(), updatedBooking.getStartDate(), updatedBooking.getEndDate());
 
-        // Subtract this booking’s own rooms from total before comparison
-        int adjusted = booked - existing.getNumRooms();
-        int available = roomType.getTotalRooms() - adjusted;
+        int currentRooms = existing.getRoomType().getId().equals(roomType.getId()) ? existing.getNumRooms() : 0;
 
-        if (updatedBooking.getNumRooms() > available) {
-            throw new IllegalArgumentException("Not enough rooms available for update.");
+        if ((bookedRooms - currentRooms + updatedBooking.getNumRooms()) > roomType.getTotalRooms()) {
+            throw new IllegalArgumentException("Not Enough Room");
         }
 
         existing.setStartDate(updatedBooking.getStartDate());

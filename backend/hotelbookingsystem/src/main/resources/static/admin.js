@@ -75,7 +75,20 @@ function updateBooking(bookingId) {
     body: JSON.stringify({ startDate, endDate, guestName, numRooms, bookingStatus }),
   })
     .then(res => {
-      if (!res.ok) throw new Error("Update failed.");
+      if (!res.ok) {
+        return res.text().then(message => {
+          if (message.includes("Cannot Modify Bookings In The Past")) {
+            alert("Cannot modify bookings in the past.");
+          } else if (message.includes("Not Enough Room")) {
+            alert("There are not enough available rooms for that date.");
+          } else if (message.includes("Invalid number of rooms")) {
+            alert("The number of rooms must be at least 1.");
+          } else {
+            alert("Update failed: " + message);
+          }
+          throw new Error(message);
+        });
+      }
       return res.text();
     })
     .then(() => {
@@ -84,7 +97,6 @@ function updateBooking(bookingId) {
     })
     .catch(err => {
       console.error(err);
-      alert("Error updating booking.");
     });
 }
 
