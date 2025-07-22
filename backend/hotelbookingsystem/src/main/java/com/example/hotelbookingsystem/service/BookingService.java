@@ -139,4 +139,15 @@ public class BookingService {
 
         return bookingRepository.save(existing);
     }
+    public void cancelBooking(Long bookingId) {
+    Booking booking = bookingRepository.findById(bookingId)
+        .orElseThrow(() -> new IllegalArgumentException("Booking not found"));
+
+    if (!booking.getBookingStatus().equalsIgnoreCase("booked")) {
+        throw new IllegalArgumentException("Only booked reservations can be cancelled.");
+    }
+
+    booking.setBookingStatus("cancelled");
+    bookingRepository.save(booking);
+    }
 }

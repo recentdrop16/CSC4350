@@ -4,6 +4,7 @@ import com.example.hotelbookingsystem.dto.BookingRequest;
 import com.example.hotelbookingsystem.model.Booking;
 import com.example.hotelbookingsystem.service.BookingService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -47,5 +48,16 @@ public class BookingController {
     public ResponseEntity<String> updateBooking(@PathVariable Long id, @RequestBody Booking updatedBooking) {
         Booking saved = bookingService.updateBooking(id, updatedBooking);
         return ResponseEntity.ok("Booking ID: " + saved.getId() + " updated successfully.");
+    }
+    @PutMapping("/cancel/{bookingId}")
+    public ResponseEntity<String> cancelBooking(@PathVariable Long bookingId) {
+        try {
+            bookingService.cancelBooking(bookingId);
+            return ResponseEntity.ok("Booking cancelled");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error cancelling booking");
+        }
     }
 }

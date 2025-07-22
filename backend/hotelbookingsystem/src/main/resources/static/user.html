@@ -164,9 +164,15 @@
       <tbody id="bookingTable">
       </tbody>
     </table>
+    <p style="margin-top: 20px; font-size: 0.9em; color: #eee;">
+      <strong>Note:</strong> We can only process cancellations for bookings more than <strong>2 days</strong> from today.<br>
+      If you wish to cancel a booking less than 2 days from check-in, please contact our support team at 
+      <a href="mailto:contact@weeb.com" style="color: #90cdf4;">contact@weeb.com</a>.
+    </p>
     
     <button onclick="logout()">Logout</button>
     <button onclick="window.location.href='rooms.html'">Make Another Booking</button>
+    <button onclick="enableCancelMode()">Cancel Booking</button>
   </div>
 
   <div id="paymentModal">
@@ -318,6 +324,87 @@
     document.getElementById('paymentModal').onclick = function(event) {
       if (event.target === this) this.style.display = "none";
     };
+    function enableCancelMode() {
+  const tableRows = document.querySelectorAll("#bookingTable tr");
+
+  tableRows.forEach(row => {
+    const bookingId = row.cells[0].innerText;
+    const statusCell = row.cells[6];
+    const currentStatus = statusCell.innerText.trim().toLowerCase();
+    const checkInDate = new Date(row.cells[2].innerText);
+    const today = new Date();
+    const diffDays = (checkInDate - today) / (1000 * 60 * 60 * 24);
+
+    // Only allow changing status if check-in is more than 2 days away and not already cancelled
+    if (diffDays > 2 && currentStatus === "booked") {
+      // Clear the cell
+      statusCell.innerHTML = "";
+
+      // Wrapper div for vertical stack
+      const container = document.createElement("div");
+      container.style.display = "flex";
+      container.style.flexDirection = "column";
+      container.style.alignItems = "center";
+
+      // Dropdown
+      const select = document.createElement("select");
+      select.style.padding = "5px";
+      select.style.fontSize = "12px";
+      select.style.marginBottom = "4px";
+      select.appendChild(new Option("booked", "booked"));
+      select.appendChild(new Option("cancelled", "cancelled"));
+      select.value = "booked";
+
+      // Button row
+      const buttonRow = document.createElement("div");
+      buttonRow.style.display = "flex";
+      buttonRow.style.justifyContent = "center";
+      buttonRow.style.gap = "6px";
+
+      // Save Button
+      const saveBtn = document.createElement("button");
+      saveBtn.textContent = "Save";
+      saveBtn.style.padding = "4px 8px";
+      saveBtn.style.fontSize = "11px";
+      saveBtn.style.borderRadius = "4px";
+      saveBtn.onclick = () => {
+        if (select.value === "cancelled") {
+          fetch(`http://localhost:8080/api/bookings/cancel/${bookingId}`, {
+            method: "PUT"
+          })
+            .then(res => {
+              if (!res.ok) throw new Error("Cancel failed");
+              alert("Booking cancelled successfully.");
+              location.reload();
+            })
+            .catch(err => {
+              console.error(err);
+              alert("Failed to cancel booking.");
+            });
+        } else {
+          alert("No change made.");
+        }
+      };
+
+      // Back Button
+      const backBtn = document.createElement("button");
+      backBtn.textContent = "Back";
+      backBtn.style.padding = "4px 8px";
+      backBtn.style.fontSize = "11px";
+      backBtn.style.borderRadius = "4px";
+      backBtn.onclick = () => {
+        statusCell.innerText = "booked";
+      };
+
+      // Assemble
+      buttonRow.appendChild(saveBtn);
+      buttonRow.appendChild(backBtn);
+      container.appendChild(select);
+      container.appendChild(buttonRow);
+      statusCell.appendChild(container);
+    }
+  });
+}   
   </script>
 </body>
 </html>

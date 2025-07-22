@@ -2,8 +2,6 @@ package com.example.hotelbookingsystem.controller;
 import java.time.LocalDate;
 import com.example.hotelbookingsystem.dto.AvailableRoomDTO;
 import com.example.hotelbookingsystem.service.RoomService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
