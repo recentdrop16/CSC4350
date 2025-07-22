@@ -148,6 +148,28 @@
   </div>
 
 <script>
+const username = localStorage.getItem("username");
+  if (!username) {
+    alert("You must be logged in.");
+    window.location.href = "index.html";
+  } else {
+    fetch(`http://localhost:8080/api/users/${username}`)
+      .then(res => {
+        if (!res.ok) throw new Error("User not found");
+        return res.json();
+      })
+      .then(user => {
+        if (user.role !== "1") {
+          alert("Access denied. Admins only.");
+          window.location.href = "index.html";
+        }
+      })
+      .catch(err => {
+        console.error("Error checking role:", err);
+        alert("Something went wrong. Please log in again.");
+        window.location.href = "index.html";
+      });
+  }
 const roomTypeForm = document.getElementById("roomTypeForm");
 const roomTypeTableBody = document.querySelector("#roomTypeTable tbody");
 
