@@ -51,7 +51,6 @@
       background-color: #ddd;
     }
 
-    /* Receipt Modal */
     #paymentModal {
       display: none;
       position: fixed;
@@ -335,18 +334,15 @@
     const today = new Date();
     const diffDays = (checkInDate - today) / (1000 * 60 * 60 * 24);
 
-    // Only allow changing status if check-in is more than 2 days away and not already cancelled
     if (diffDays > 2 && currentStatus === "booked") {
-      // Clear the cell
       statusCell.innerHTML = "";
 
-      // Wrapper div for vertical stack
       const container = document.createElement("div");
       container.style.display = "flex";
       container.style.flexDirection = "column";
       container.style.alignItems = "center";
 
-      // Dropdown
+      
       const select = document.createElement("select");
       select.style.padding = "5px";
       select.style.fontSize = "12px";
@@ -355,13 +351,13 @@
       select.appendChild(new Option("cancelled", "cancelled"));
       select.value = "booked";
 
-      // Button row
+      
       const buttonRow = document.createElement("div");
       buttonRow.style.display = "flex";
       buttonRow.style.justifyContent = "center";
       buttonRow.style.gap = "6px";
 
-      // Save Button
+     
       const saveBtn = document.createElement("button");
       saveBtn.textContent = "Save";
       saveBtn.style.padding = "4px 8px";
@@ -374,7 +370,7 @@
           })
             .then(res => {
               if (!res.ok) throw new Error("Cancel failed");
-              alert("Booking cancelled successfully.");
+              alert("Booking cancelled successfully. Please expect a refund in 30 days");
               location.reload();
             })
             .catch(err => {
